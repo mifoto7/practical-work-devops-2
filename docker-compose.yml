@@ -1,0 +1,55 @@
+# Compose v2: поле version не нужно.
+services:
+  app:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    # Тег версии, не latest — воспроизводимый деплой.
+    image: app-backend:1.0.0
+    container_name: app
+    ports:
+      - "8080:8080"
+    environment:
+      HTTP_PORT: "8080"
+      # STATIC_DIR как в PDF; фактически UI из //go:embed (том не монтируем).
+      STATIC_DIR: /app/static
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_USER: ${DB_USER:-app}
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      DB_NAME: ${DB_NAME:-appdb}
+    depends_on:
+      db:
+        # Ждём готовности БД, иначе connection refused при старте.
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - app_net
+
+  db:
+    image: postgres:16-alpine
+    container_name: app-db
+    environment:
+      POSTGRES_USER: ${DB_USER:-app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+      POSTGRES_DB: ${DB_NAME:-appdb}
+    # 5432 наружу не пробрасываем — БД только в app_net.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-app} -d ${DB_NAME:-appdb}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro
+    restart: unless-stopped
+    networks:
+      - app_net
+
+volumes:
+  db_data:
+
+networks:
+  app_net:
+    driver: bridge

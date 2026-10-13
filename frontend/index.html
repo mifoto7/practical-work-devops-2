@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Items</title>
+</head>
+<body>
+  <h1>Items</h1>
+  <ul id="items"><li>Загрузка…</li></ul>
+  <p id="error"></p>
+  <script>
+    fetch("/api/items")
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (items) {
+        var ul = document.getElementById("items");
+        ul.innerHTML = "";
+        if (!items.length) {
+          ul.innerHTML = "<li>Нет записей</li>";
+          return;
+        }
+        items.forEach(function (it) {
+          var li = document.createElement("li");
+          li.textContent = "#" + it.id + " — " + it.name;
+          ul.appendChild(li);
+        });
+      })
+      .catch(function (e) {
+        document.getElementById("items").innerHTML = "";
+        document.getElementById("error").textContent = String(e);
+      });
+  </script>
+</body>
+</html>
