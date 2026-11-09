@@ -1,0 +1,14 @@
+{
+  "name": "practical-work-devops-3",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test:e2e": "playwright test",
+    "ci:prepare": "node scripts/ci.mjs prepare-env",
+    "ci:verify": "node scripts/ci.mjs verify",
+    "ci:collect": "node scripts/ci.mjs collect"
+  },
+  "devDependencies": { "@playwright/test": "1.65.0" }
+}
