@@ -7,3 +7,7 @@ backend/bin/
 *.swp
 .DS_Store
 *.log
+node_modules/
+artifacts/
+test-results/
+playwright-report/

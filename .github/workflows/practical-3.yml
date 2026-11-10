@@ -1,0 +1,80 @@
+name: Practical 3 - Docker Compose and database UI tests
+
+on:
+  push:
+    branches: [main, codex/practical-3]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: practical-3-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  COMPOSE_PROJECT_NAME: praktika-3-ci
+  APP_PORT: ${{ vars.APP_PORT || '18080' }}
+
+jobs:
+  deploy-and-test:
+    runs-on: [self-hosted, windows]
+    timeout-minutes: 20
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Create .env from GitHub Secrets
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+        run: node scripts/ci.mjs prepare-env
+
+      - name: Install test dependencies
+        run: npm ci
+
+      - name: Install Chromium for browser tests
+        run: npx playwright install chromium
+
+      - name: Start Docker Compose project
+        run: docker compose up -d --build --wait --wait-timeout 120
+
+      - name: Check every container and database connection
+        run: node scripts/ci.mjs verify
+
+      - name: Compare database, API and actual web interface
+        run: npm run test:e2e
+
+      - name: Collect logs, Docker state and factual test report
+        if: always()
+        run: node scripts/ci.mjs collect
+
+      - name: Upload required artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: practical-3-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/
+            test-results/
+            playwright-report/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish test summary
+        if: always()
+        run: node scripts/ci.mjs summary
+
+      - name: Remove runtime file containing secrets
+        if: always()
+        run: node scripts/ci.mjs cleanup-env
