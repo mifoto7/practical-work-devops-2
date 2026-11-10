@@ -21,19 +21,24 @@ Workflow находится в `.github/workflows/practical-3.yml` и выпол
 
 Репозиторий: <https://github.com/mifoto7/practical-work-devops-2>.
 
-### 1. Self-hosted runner на Windows
+### 1. Self-hosted runner на выбранной машине
 
-Откройте **Settings → Actions → Runners → New self-hosted runner** и выберите Windows / x64.
-Выполните команды, показанные GitHub: скачивание, распаковку, регистрацию и `run.cmd`.
-Используйте отдельную папку, например `C:\Users\user\actions-runner-practical-3`.
-Команда регистрации содержит временный токен: его не нужно добавлять в репозиторий или отправлять в чат.
+Runner можно установить на другом компьютере или на облачной виртуальной машине.
+Компьютер, на котором готовили файлы, использовать для этого необязательно.
+Сохранено `runs-on: self-hosted`: обычный GitHub-hosted runner с `ubuntu-latest` не выполняет критерий на 3 балла.
 
-В настройках GitHub runner должен отображаться как подключённый и готовый к заданиям (Idle / Online),
-а в его окне должна быть строка `Listening for Jobs`.
-Runner и Docker Desktop должны оставаться запущенными во время выполнения задания.
+На выбранной машине нужны Git, поддерживаемая runner операционная система и Docker с Docker Compose.
+На Windows можно использовать Docker Desktop, на Linux — Docker Engine с Compose plugin.
+Node.js 22 устанавливается самим workflow. На Linux шаг установки Chromium также устанавливает системные библиотеки;
+для первой такой установки нужны соответствующие права администратора.
 
-Нужны Git for Windows и доступ к Docker Desktop из той же учётной записи, под которой запущен runner.
-Для этой учебной работы достаточно обычного запуска `run.cmd`; установка службы не обязательна.
+Откройте **Settings → Actions → Runners → New self-hosted runner**, выберите ОС и архитектуру выбранной машины.
+Выполните именно на ней команды скачивания и регистрации, показанные GitHub.
+Затем запустите `run.sh` на Linux или `run.cmd` на Windows.
+Временный токен регистрации не должен попадать в репозиторий.
+
+В GitHub runner должен отображаться как Idle / Online; в его окне — `Listening for Jobs`.
+Runner и Docker должны оставаться запущенными во время выполнения и проверки задания.
 
 ### 2. Секреты
 
@@ -66,30 +71,22 @@ Workflow запускается при push в `main` или `codex/practical-3`
 После запуска откройте job `deploy-and-test` и убедитесь, что указан ваш runner, а не GitHub-hosted машина.
 Приложение на компьютере runner будет доступно по адресу <http://127.0.0.1:18080>.
 
-## Локальная проверка до GitHub Actions
+## Проверка до GitHub Actions
 
-Нужны Docker Desktop и Node.js 22 или новее с npm.
-В PowerShell, находясь в папке проекта:
+На любой машине с Docker и Node.js 22+ можно проверить проект отдельно от runner.
+Сначала настройте `.env` по `.env.example`, затем выполните:
 
-```powershell
-$env:DB_USER = 'practical_user'
-$env:DB_NAME = 'practical_db'
-# Случайный пароль создаётся в памяти; не печатается в консоль.
-$env:DB_PASSWORD = [Guid]::NewGuid().ToString('N') + [Guid]::NewGuid().ToString('N')
-$env:APP_PORT = '18080'
-$env:COMPOSE_PROJECT_NAME = 'praktika-3'
-node scripts/ci.mjs prepare-env
+```text
 npm ci
-npx playwright install chromium
+npx playwright install --with-deps chromium
 docker compose up -d --build --wait --wait-timeout 120
 node scripts/ci.mjs verify
 npm run test:e2e
 node scripts/ci.mjs collect
 ```
 
+Используйте те же `APP_PORT` и `COMPOSE_PROJECT_NAME`, что в `.env`; при изменении порта передайте `APP_PORT` и процессу тестов.
 Повторно генерировать пароль для уже созданного тома не нужно: используйте существующий `.env`.
-На Linux для Chromium также нужны системные зависимости Playwright; установить их можно командой
-`npx playwright install --with-deps chromium` при наличии соответствующих прав.
 
 ## Материалы для проверки
 
