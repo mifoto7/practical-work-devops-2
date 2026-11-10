@@ -1,7 +1,7 @@
 # Практическая работа № 3: GitHub Actions и Docker Compose
 
 Основа — существующий проект практической № 2: Go, PostgreSQL 16 и веб-страница со списком `items`.
-Workflow находится в `.github/workflows/practical-3.yml` и выполняется на **self-hosted runner**.
+Workflow находится в `.github/workflows/practical-3.yml` и выполняется на **self-hosted runner с Windows**.
 
 ## Что делает workflow
 
@@ -21,20 +21,20 @@ Workflow находится в `.github/workflows/practical-3.yml` и выпол
 
 Репозиторий: <https://github.com/mifoto7/practical-work-devops-2>.
 
-### 1. Self-hosted runner на выбранной машине
+### 1. Self-hosted runner на Windows
 
-Runner можно установить на другом компьютере или на облачной виртуальной машине.
+Runner можно установить на другом компьютере с Windows или на облачной виртуальной машине с Windows.
 Компьютер, на котором готовили файлы, использовать для этого необязательно.
-Сохранено `runs-on: self-hosted`: обычный GitHub-hosted runner с `ubuntu-latest` не выполняет критерий на 3 балла.
+В workflow задано `runs-on: [self-hosted, windows]`: сохраняется критерий self-hosted и выбирается runner с Windows.
 
-На выбранной машине нужны Git, поддерживаемая runner операционная система и Docker с Docker Compose.
-На Windows можно использовать Docker Desktop, на Linux — Docker Engine с Compose plugin.
-Node.js 22 устанавливается самим workflow. На Linux шаг установки Chromium также устанавливает системные библиотеки;
-для первой такой установки нужны соответствующие права администратора.
+На выбранной машине нужны Git for Windows и Docker Desktop с Docker Compose.
+Docker Desktop должен работать в режиме **Linux containers**: образы Go и PostgreSQL в этом проекте рассчитаны на этот режим.
+Операционная система самого компьютера и runner при этом — Windows.
+Node.js 22 устанавливается самим workflow.
 
-Откройте **Settings → Actions → Runners → New self-hosted runner**, выберите ОС и архитектуру выбранной машины.
+Откройте **Settings → Actions → Runners → New self-hosted runner**, выберите Windows и архитектуру выбранной машины.
 Выполните именно на ней команды скачивания и регистрации, показанные GitHub.
-Затем запустите `run.sh` на Linux или `run.cmd` на Windows.
+Затем запустите `run.cmd` из папки runner.
 Временный токен регистрации не должен попадать в репозиторий.
 
 В GitHub runner должен отображаться как Idle / Online; в его окне — `Listening for Jobs`.
@@ -73,12 +73,12 @@ Workflow запускается при push в `main` или `codex/practical-3`
 
 ## Проверка до GitHub Actions
 
-На любой машине с Docker и Node.js 22+ можно проверить проект отдельно от runner.
+На Windows с Docker Desktop и Node.js 22+ можно проверить проект отдельно от runner.
 Сначала настройте `.env` по `.env.example`, затем выполните:
 
-```text
+```powershell
 npm ci
-npx playwright install --with-deps chromium
+npx playwright install chromium
 docker compose up -d --build --wait --wait-timeout 120
 node scripts/ci.mjs verify
 npm run test:e2e
@@ -114,7 +114,7 @@ node scripts/ci.mjs collect
 |---|---|---|
 | 1 | Runner установлен и зарегистрирован | Settings → Actions → Runners |
 | 1 | Runner подключён и готов к заданиям | Idle / Online и Listening for Jobs |
-| 1 | Workflow выполнен на self-hosted runner | `runs-on: self-hosted` и данные реального job |
+| 1 | Workflow выполнен на self-hosted runner | `runs-on: [self-hosted, windows]` и данные реального job |
 | 1 | Workflow выполнил запуск Compose | Шаг Start Docker Compose project |
 | 1 | Оба контейнера работают | Шаг проверки и `docker-ps.*` |
 | 1 | Используются GitHub Secrets | Три обращения `secrets.*` и настройки репозитория |

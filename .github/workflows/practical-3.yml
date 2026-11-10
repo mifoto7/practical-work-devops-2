@@ -18,7 +18,7 @@ env:
 
 jobs:
   deploy-and-test:
-    runs-on: self-hosted
+    runs-on: [self-hosted, windows]
     timeout-minutes: 20
     steps:
       - name: Checkout project
@@ -43,7 +43,7 @@ jobs:
         run: npm ci
 
       - name: Install Chromium for browser tests
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Start Docker Compose project
         run: docker compose up -d --build --wait --wait-timeout 120
