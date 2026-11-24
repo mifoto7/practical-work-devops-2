@@ -95,8 +95,6 @@ function collect() {
   const commands = [
     ['deployment-logs.txt', ['logs', '--no-color', '--timestamps']],
     ['docker-ps.txt', ['ps', '--all']],
-    ['docker-ps.json', ['ps', '--all', '--format', 'json']],
-    ['docker-images.txt', ['images']],
   ];
   const diagnostics = {};
   for (const [file, args] of commands) {
@@ -119,16 +117,14 @@ function collect() {
     `- Тип runner: ${inActions ? (process.env.RUNNER_ENVIRONMENT || 'unknown') : 'локально'}`,
     `- Commit: ${process.env.GITHUB_SHA || 'локальная копия'}`,
     `- Контейнеры и подключение приложения к БД: ${deployment?.ready ? 'подтверждены' : 'не подтверждены'}`,
-    `- Тесты: успешно ${stats?.expected ?? 0}; ошибок ${stats?.unexpected ?? 'нет результата'}; пропущено ${stats?.skipped ?? 'нет результата'}`,
+    '- Тесты проверяют подключение к БД, совпадение записей SQL с ответом API и с отображением в браузере.',
+    `- Результаты тестов: успешно ${stats?.expected ?? 0}; ошибок ${stats?.unexpected ?? 'нет результата'}; пропущено ${stats?.skipped ?? 'нет результата'}`,
     `- Источник настроек: ${readJson(`${artifactDir}/environment-status.json`)?.source || 'не подтверждён'}`,
     '',
     '## Материалы проверки',
     '- `.env`: копия только с именами переменных, все значения удалены.',
-    '- `deployment-logs.txt`, `docker-ps.txt`, `docker-ps.json`, `docker-images.txt`: состояние проекта.',
-    '- `test-results/results.json`, `test-results/junit.xml`: фактические результаты тестов.',
-    '- `test-results/data-comparison.json`: записи из SQL, API и веб-интерфейса.',
-    '- `test-results/web-interface.png`: снимок страницы после загрузки записей.',
-    '- `playwright-report/index.html`: подробный отчёт браузерных тестов.',
+    '- `deployment-logs.txt`: логи контейнеров.',
+    '- `docker-ps.txt`: состояние контейнеров.',
     '',
     'Локальный успешный запуск не подтверждает регистрацию и онлайн-статус runner в GitHub.',
     '',
