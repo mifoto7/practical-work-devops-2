@@ -2,7 +2,7 @@ name: Practical 3 - Docker Compose and database UI tests
 
 on:
   push:
-    branches: [main, codex/practical-3]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -18,7 +18,7 @@ env:
 
 jobs:
   deploy-and-test:
-    runs-on: [self-hosted, windows]
+    runs-on: self-hosted
     timeout-minutes: 20
     steps:
       - name: Checkout project
@@ -64,9 +64,10 @@ jobs:
         with:
           name: practical-3-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
-            artifacts/
-            test-results/
-            playwright-report/
+            artifacts/.env
+            artifacts/deployment-logs.txt
+            artifacts/docker-ps.txt
+            artifacts/test-report.md
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 30
